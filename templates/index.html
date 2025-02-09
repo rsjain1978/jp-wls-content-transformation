@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Content Creator</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fidelity-blue': '#1E325C',
+                        'fidelity-light-blue': '#F0F4FF',
+                        'fidelity-text': '#333333',
+                        'fidelity-accent': '#4A90E2',
+                        'fidelity-success': '#34D399',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #ffffff 0%, #F0F4FF 100%);
+        }
+        .btn-fidelity {
+            background-color: #1E325C;
+            color: white;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+        .btn-fidelity:hover {
+            background-color: #2a437a;
+            transform: translateY(-2px);
+        }
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .thumbnail-card {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .thumbnail-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .thumbnail-card.selected {
+            border: 3px solid #1E325C;
+        }
+        .thumbnail-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #1E325C;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .timestamp {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        .action-icons {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .thumbnail-card:hover .action-icons {
+            opacity: 1;
+        }
+        .action-icon {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1E325C;
+        }
+        .action-icon:hover {
+            background: #1E325C;
+            color: white;
+            transform: scale(1.1);
+        }
+        .action-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .language-select {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #333;
+            min-width: 150px;
+            font-weight: 500;
+        }
+        .language-select:focus {
+            border-color: #1E325C;
+            outline: none;
+            ring: 2px;
+            ring-color: #1E325C;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #333333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+        .nav-item:hover {
+            background-color: #F0F4FF;
+            color: #1E325C;
+        }
+        .nav-item.active {
+            background-color: #1E325C;
+            color: white;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: all 0.3s ease;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success {
+            border-left: 4px solid #34D399;
+        }
+        .toast.error {
+            border-left: 4px solid #EF4444;
+        }
+        .main-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('/static/images/background.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(30, 50, 92, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .spinner-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .processing-text {
+            margin-top: 1rem;
+            color: #1E325C;
+            font-weight: 500;
+        }
+        body.processing {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Processing Overlay -->
+    <div id="processingOverlay" class="overlay">
+        <div class="spinner-container">
+            <span class="loading loading-spinner loading-lg text-fidelity-blue"></span>
+            <div class="processing-text">Processing your request...</div>
+            <div id="processingStatus" class="text-sm text-gray-500 mt-2"></div>
+        </div>
+    </div>
+
+    <!-- Background -->
+    <div class="main-background"></div>
+    
+    <div class="flex h-screen">
+        <!-- Left Panel -->
+        <div class="w-64 bg-white border-r border-gray-200">
+            <div class="p-6">
+                <!-- <img src="/static/images/fidelity-connects-logo.png" alt="Fidelity Connects" class="w-full h-auto mb-2"> -->
+            </div>
+            <nav class="mt-6 py-4">
+                <a href="/" class="nav-item">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+                <a href="/tool" class="nav-item active">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Fidelity Connect
+                </a>
+                <a href="/documents" class="nav-item">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Documents
+                </a>
+                <a href="#" class="nav-item">
+                    <img src="/static/images/youtube.png" alt="YouTube" class="w-5 h-5 mr-3 object-contain">
+                    YouTube
+                </a>
+                <a href="#" class="nav-item">
+                    <img src="/static/images/substack.png" alt="Substack" class="w-5 h-5 mr-3 object-contain">
+                    Substack
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white bg-opacity-90 border-b border-gray-200 py-6">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-4xl mx-auto flex items-center justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-fidelity-blue">Content Processor</h1>
+                        </div>
+                        <select id="targetLanguage" class="language-select">
+                            <option value="Japanese" selected>Japanese</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Portuguese">Portuguese</option>
+                            <option value="Chinese">Chinese</option>
+                            <option value="Korean">Korean</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container mx-auto px-6 py-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-semibold text-fidelity-text">Latest Fidelity Connect Episodes</h2>
+                            <p class="text-sm text-gray-600">Select a video for transcription</p>
+                        </div>
+
+                        <div class="thumbnail-grid">
+                            <!-- Videos will be loaded here -->
+                        </div>
+
+                        <div id="loading" class="hidden py-12">
+                            <div class="flex justify-center items-center gap-3">
+                                <span class="loading loading-spinner loading-lg text-fidelity-blue"></span>
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-fidelity-text">Processing...</span>
+                                    <span class="text-sm text-gray-500" id="processingStatus"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        let selectedVideos = new Set();
+        const overlay = document.getElementById('processingOverlay');
+        const processingStatus = document.getElementById('processingStatus');
+        
+        function showProcessingOverlay(message = '') {
+            overlay.classList.add('active');
+            document.body.classList.add('processing');
+            if (message) {
+                processingStatus.textContent = message;
+            }
+        }
+        
+        function hideProcessingOverlay() {
+            overlay.classList.remove('active');
+            document.body.classList.remove('processing');
+            processingStatus.textContent = '';
+        }
+
+        // Toast notification handler
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const icon = toast.querySelector('svg');
+            
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+                icon.style.color = '#34D399';
+            } else {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+                icon.style.color = '#EF4444';
+            }
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Generate handlers
+        async function generateContent(videoId, outputType) {
+            const targetLanguage = document.getElementById('targetLanguage').value;
+            if (!targetLanguage) return;
+            
+            showProcessingOverlay(`Generating ${outputType} in ${targetLanguage}...`);
+            
+            try {
+                const response = await fetch('/generate-version', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        video_ids: [videoId],
+                        target_language: targetLanguage,
+                        output_type: outputType
+                    })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${outputType}_${targetLanguage.toLowerCase()}.docx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    showToast(`${outputType} generated successfully!`);
+                } else {
+                    throw new Error(`Failed to generate ${outputType}`);
+                }
+            } catch (error) {
+                showToast(`Error generating ${outputType}: ${error.message}`, 'error');
+            } finally {
+                hideProcessingOverlay();
+            }
+        }
+
+        // Modify card click handler
+        function handleCardClick(card, videoId) {
+            if (card.classList.contains('selected')) {
+                card.classList.remove('selected');
+                selectedVideos.delete(videoId);
+            } else {
+                // Clear previous selection
+                document.querySelectorAll('.thumbnail-card').forEach(c => {
+                    c.classList.remove('selected');
+                });
+                selectedVideos.clear();
+                
+                // Add new selection
+                card.classList.add('selected');
+                selectedVideos.add(videoId);
+            }
+        }
+
+        // Load default playlist on page load
+        window.addEventListener('load', async () => {
+            showProcessingOverlay('Loading playlist...');
+            
+            try {
+                const response = await fetch('/default-playlist');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const gridContainer = document.querySelector('.thumbnail-grid');
+                    gridContainer.innerHTML = '';
+                    
+                    data.videos.forEach(video => {
+                        const card = document.createElement('div');
+                        card.className = 'thumbnail-card';
+                        card.dataset.videoId = video.video_id;
+                        card.innerHTML = `
+                            <div class="relative">
+                                <img src="${video.thumbnail_path}" alt="${video.title}" class="w-full h-48 object-cover" />
+                                <span class="timestamp">${video.duration}</span>
+                                <div class="action-icons">
+                                    <button class="action-icon" title="Generate Version" onclick="generateContent('${video.video_id}', 'version')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="action-icon" title="Generate Tweet" onclick="generateContent('${video.video_id}', 'tweet')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="action-icon" title="Generate Summary" onclick="generateContent('${video.video_id}', 'summary')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-fidelity-text line-clamp-2 mb-2">${video.title}</h3>
+                                <p class="text-sm text-gray-500">Published: ${video.publish_date}</p>
+                            </div>
+                        `;
+                        
+                        card.addEventListener('click', (e) => {
+                            // Don't trigger selection if clicking action buttons
+                            if (!e.target.closest('.action-icons')) {
+                                handleCardClick(card, video.video_id);
+                            }
+                        });
+                        
+                        gridContainer.appendChild(card);
+                    });
+                    showToast('Playlist loaded successfully');
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                showToast('Error loading playlist: ' + error.message, 'error');
+            } finally {
+                hideProcessingOverlay();
+            }
+        });
+    </script>
+</body>
+</html> 

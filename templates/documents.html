@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Content Creator</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fidelity-blue': '#1E325C',
+                        'fidelity-light-blue': '#F0F4FF',
+                        'fidelity-text': '#333333',
+                        'fidelity-accent': '#4A90E2',
+                        'fidelity-success': '#34D399',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #ffffff 0%, #F0F4FF 100%);
+        }
+        .btn-fidelity {
+            background-color: #1E325C;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-fidelity:hover {
+            background-color: #2a437a;
+            transform: translateY(-2px);
+        }
+        .dropzone {
+            border: 2px dashed #1E325C;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .dropzone.dragover {
+            background-color: #F0F4FF;
+            border-color: #2a437a;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #333333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+        .nav-item:hover {
+            background-color: #F0F4FF;
+            color: #1E325C;
+        }
+        .nav-item.active {
+            background-color: #1E325C;
+            color: white;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(30, 50, 92, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .spinner-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .processing-text {
+            margin-top: 1rem;
+            color: #1E325C;
+            font-weight: 500;
+        }
+        body.processing {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-white">
+    <!-- Processing Overlay -->
+    <div id="processingOverlay" class="overlay">
+        <div class="spinner-container">
+            <span class="loading loading-spinner loading-lg text-fidelity-blue"></span>
+            <div class="processing-text">Processing your document...</div>
+            <div id="processingStatus" class="text-sm text-gray-500 mt-2"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex h-screen">
+        <!-- Left Panel -->
+        <div class="w-64 bg-white border-r border-gray-200">
+            <div class="p-6">
+                <!-- <span class="text-2xl font-bold text-fidelity-blue">Fidelity International</span> -->
+            </div>
+            <nav class="mt-6 py-4">
+                <a href="/" class="nav-item">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+                <a href="/tool" class="nav-item">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Fidelity Connect
+                </a>
+                <a href="/documents" class="nav-item active">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Documents
+                </a>
+                <a href="#" class="nav-item">
+                    <img src="/static/images/youtube.png" alt="YouTube" class="w-5 h-5 mr-3 object-contain">
+                    YouTube
+                </a>
+                <a href="#" class="nav-item">
+                    <img src="/static/images/substack.png" alt="Substack" class="w-5 h-5 mr-3 object-contain">
+                    Substack
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="container mx-auto px-6 py-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h1 class="text-4xl font-bold text-fidelity-blue mb-4">Document Processor</h1>
+                        <p class="text-lg text-gray-600">Upload documents for processing</p>
+                        <div class="mt-4">
+                            <select id="targetLanguage" class="select select-bordered w-full max-w-xs">
+                                <option value="Japanese">Japanese</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                                <option value="Italian">Italian</option>
+                                <option value="Portuguese">Portuguese</option>
+                                <option value="Chinese">Chinese</option>
+                                <option value="Korean">Korean</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white shadow-lg border border-gray-100">
+                        <div class="card-body">
+                            <div class="dropzone" id="dropzone">
+                                <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.doc,.docx,.txt" />
+                                <div class="text-lg text-gray-600">
+                                    <p>Drag and drop files here</p>
+                                    <p>or</p>
+                                    <button class="btn btn-fidelity mt-4" onclick="document.getElementById('fileInput').click()">
+                                        Choose Files
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="fileList" class="mt-8 hidden">
+                                <div class="divider text-fidelity-text font-semibold">Uploaded Files</div>
+                                <div class="space-y-4" id="fileListContent">
+                                    <!-- Files will be listed here -->
+                                </div>
+                            </div>
+
+                            <div id="loading" class="hidden py-12">
+                                <div class="flex justify-center items-center space-x-3">
+                                    <span class="loading loading-spinner loading-lg text-fidelity-blue"></span>
+                                    <span class="text-fidelity-text font-medium">Processing...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileListContent = document.getElementById('fileListContent');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Handle dropped files
+        dropzone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFiles, false);
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropzone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropzone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({ target: { files: files } });
+        }
+
+        function handleFiles(e) {
+            const files = [...e.target.files];
+            fileList.classList.remove('hidden');
+            fileListContent.innerHTML = '';
+            
+            files.forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg';
+                fileDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 text-fidelity-blue mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-fidelity-text">${file.name}</p>
+                            <p class="text-sm text-gray-500">${formatFileSize(file.size)}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-fidelity btn-sm" onclick="processFile('${file.name}')">Process</button>
+                `;
+                fileListContent.appendChild(fileDiv);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showProcessingOverlay(message = '') {
+            const overlay = document.getElementById('processingOverlay');
+            const status = document.getElementById('processingStatus');
+            overlay.classList.add('active');
+            document.body.classList.add('processing');
+            if (message) {
+                status.textContent = message;
+            }
+        }
+
+        function hideProcessingOverlay() {
+            const overlay = document.getElementById('processingOverlay');
+            const status = document.getElementById('processingStatus');
+            overlay.classList.remove('active');
+            document.body.classList.remove('processing');
+            status.textContent = '';
+        }
+
+        async function processFile(fileName) {
+            const targetLanguage = document.getElementById('targetLanguage').value;
+            showProcessingOverlay(`Converting document to ${targetLanguage}...`);
+            
+            try {
+                // Create form data
+                const formData = new FormData();
+                const fileInput = document.getElementById('fileInput');
+                const file = Array.from(fileInput.files).find(f => f.name === fileName);
+                
+                if (!file) {
+                    throw new Error('File not found');
+                }
+                
+                formData.append('file', file);
+                formData.append('target_language', targetLanguage);
+                
+                // Send request
+                const response = await fetch('/process-document', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // Get the blob
+                    const blob = await response.blob();
+                    
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `translated_${fileName}.docx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    
+                    showToast('Document processed successfully!', 'success');
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to process document');
+                }
+            } catch (error) {
+                showToast(`Error processing document: ${error.message}`, 'error');
+            } finally {
+                hideProcessingOverlay();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-y-0`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

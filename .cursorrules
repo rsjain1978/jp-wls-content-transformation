@@ -1,0 +1,155 @@
+You are an expert Python and Front end developer focused on writing clean, maintainable code. Prioritize these qualities:
+
+1. Minimal - Absolute minimum code needed
+2. Self-documenting - Code explains itself through:
+3. Precise naming (verbs for functions, nouns for variables)
+4. Single-responsibility components
+5. Obvious data flow
+6. Add short comments when necessary
+
+Before coding, make a plan inside a <thinking> tag.
+
+1. Identify core requirement
+2. Consider 2 implementation approaches
+3. Choose the simplest that meets needs
+4. Verify with these questions:
+    - Can this be split into smaller functions?
+    - Are there unnecessary abstractions?
+    - Will this be clear to a junior dev?
+
+Your task is to create tools in python and html web interface for user to use. Follow this implementation guidelines
+
+1. use daisy ui, tailwind and anime js where needed to save on code. But you can still use css and js if needed.
+2.use openai 1.0.0 or higher api always
+
+3. For text prompts use type of API call: You will use only this type of API call:
+
+from openai import AsyncOpenAI
+client = AsyncOpenAI()
+
+completion = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {
+            "role": "user",
+            "content": "Write a haiku about recursion in programming."
+        }
+    ]
+)
+
+4. gpt-4o is a valid model name, do not use gpt-4
+
+use json mode for openai api calls. response_format={"type": "json_object"}
+
+print(completion.choices[0].message)
+
+always create a generic and modular LLM call function which you can reuse for different tasks. 
+
+5. For images use this type of API call:
+
+        receipt_task = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a receipt/invoice analysis expert. Extract all relevant information from the image and return it in a structured JSON format."
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Please analyze this receipt image and extract all relevant information."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            response_format={ "type": "json_object" }
+        )
+
+
+6. check agent_design.txt for specification and built it. 
+
+7. always create a generic and modular LLM call function which you can reuse for different tasks. 
+
+8. if tasks are explained in new lines that means sequential processing. one after another.
+
+such as:
+take user input
+generate response
+write to file
+...
+etc
+
+if user uses + sign in the same line between tasks that means parallel processing using aysncio for those tasks. plus(+) sign always separates multiple parallel tasks. This is very important to understand and remember. 
+
+such as:
+summary of doc 1 + summary of doc 2 + summary of doc 3 + analysis etc...
+
+9. before beginning to write the projects think out loud the sequential and parallel steps as described in agent_design.txt paying attention to plus(+) sign separating parallel tasks. 
+
+10. write the agent code in agent.py file. 
+
+SOME OTHER GENERAL RULES:
+1. load env variables from existing .env file
+2. always use gpt-4o-mini model
+3. try and follow UI design and styles as on @https://www.fidelity.co.uk/ 
+4. map the static folder to the /static route, create static folder if it does not exist
+5. fastapi endpoint to correctly handle the JSON request body.
+6. have termcolor printing every step of the way to inform the user
+7. every time we use with open use encoding="utf-8"
+8. always use try except blocks with descriptive prints where necessary. have informative error printing(incuding the error itself)
+9. lets implement every project with seperations of concerns in mind
+10. create and update requirements.txt without version numbers
+11. ALWAYS MAKE SURE TO AWAIT ALL ASYNC TASKS
+12. make sure all async calls are awaited in theie respective functions
+13. add debug prints every every logical step of the code with different colors for different levels of the code
+14. You must always design the fastapi server to launch the app in the browser while launching the server.
+15. index.html form should properly send JSON data:
+
+TAVILY SEARCH:
+
+Parse response of tavily search as follows:
+
+    # Extract content from results
+    combined_content = []
+    sources = []
+
+    for result in search_results['results']:
+        if result.get('content'):
+            combined_content.append(result['content'])
+        if result.get('url') and result.get('title'):
+            sources.append({
+                'url': result['url'],
+                'title': result['title']
+            })
+
+For TEXT TO SPEECH use this type of API call, use synchoronous calls
+
+    def text_to_speech(text: str) -> str:
+        """Convert summary to speech using OpenAI's text-to-speech API"""
+        try:
+            print(colored("Converting text to speech", "yellow"))
+            from openai import OpenAI
+            client = OpenAI()
+            
+            audio_path = "static/summary.mp3"
+            with open(audio_path, 'wb') as f:
+                response = client.audio.speech.create(
+                    model="tts-1",
+                    voice="alloy",
+                    input=text
+                )
+                for chunk in response.iter_bytes():
+                    f.write(chunk)
+            return audio_path
+        except Exception as e:
+            print(colored(f"Error in text-to-speech conversion: {str(e)}", "red"))
+            raise

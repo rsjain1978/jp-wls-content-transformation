@@ -1,0 +1,25 @@
+User provides link to a podcast
+
+download the podcast and save it to a folder
+
+extract the transcript from the podcast
+
+convert the transcript into specified language on UI
+
+show the user the transcript on UI
+
+User provides a document
+
+extract the text from the document
+
+convert the text into specified language on UI
+
+show the user the text on UI
+
+user should be able to provide another podcast or document
+
+repeat the process
+
+logically summarise all the generated outputs from above steps into one document
+
+Show user the final outcome on UI.
