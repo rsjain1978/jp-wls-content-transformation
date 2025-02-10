@@ -25,4 +25,13 @@ PyMuPDF
 Pillow
 PyPDF2
 reportlab
-pytesseract 
+pytesseract
+pydub
+unstructured
+
+# External Dependencies (not pip-installable):
+# FFmpeg - Required for audio processing
+# Installation:
+# Windows: choco install ffmpeg
+# Mac: brew install ffmpeg
+# Linux: sudo apt-get install ffmpeg 

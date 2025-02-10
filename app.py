@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, Form, Body
+from fastapi import FastAPI, Request, UploadFile, Form, Body, HTTPException, File
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
@@ -15,6 +15,12 @@ from document.generator import DocumentGenerator
 from document.processor import DocumentProcessor
 from typing import List, Dict
 import tempfile
+import logging
+import time
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -28,6 +34,8 @@ Path("templates").mkdir(exist_ok=True)
 Path("static/thumbnails").mkdir(exist_ok=True)
 Path("static/uploads").mkdir(exist_ok=True)
 Path("static/temp").mkdir(exist_ok=True)
+Path("static/podcasts").mkdir(exist_ok=True)
+Path("static/images").mkdir(exist_ok=True)
 
 # Mount static directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -59,6 +67,11 @@ async def tool(request: Request):
 async def documents(request: Request):
     """Render the document processing page"""
     return templates.TemplateResponse("documents.html", {"request": request})
+
+@app.get("/podcast")
+async def podcast(request: Request):
+    """Render the podcast generation page"""
+    return templates.TemplateResponse("podcast.html", {"request": request})
 
 @app.get("/default-playlist")
 async def get_default_playlist():
@@ -230,6 +243,72 @@ async def process_document(
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
+
+@app.post("/api/generate/podcast")
+async def generate_podcast_endpoint(
+    file: UploadFile = File(...),
+    target_language: str = Form(...)
+):
+    """Generate podcast from uploaded document"""
+    file_path = None
+    try:
+        # Validate file type
+        if not file.filename.lower().endswith(('.txt', '.doc', '.docx')):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Only .txt, .doc, and .docx files are supported."
+            )
+        
+        logger.info(f"Generating podcast from file: {file.filename} in {target_language}")
+        
+        # Create directories if they don't exist
+        os.makedirs("static/uploads", exist_ok=True)
+        os.makedirs("static/podcasts", exist_ok=True)
+        
+        # Save uploaded file with unique name to prevent conflicts
+        timestamp = int(time.time())
+        file_path = f"static/uploads/{timestamp}_{file.filename}"
+        content = await file.read()
+        
+        if not content:
+            raise HTTPException(
+                status_code=400,
+                detail="Empty file uploaded"
+            )
+            
+        with open(file_path, "wb") as buffer:
+            buffer.write(content)
+            
+        # Process the document
+        processor = ContentProcessor()
+        
+        # Generate podcast directly from file path
+        audio_path = await processor.generate_podcast(file_path, target_language)
+        logger.info(f"Generated podcast at {audio_path}")
+        
+        if not os.path.exists(audio_path):
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to generate audio file"
+            )
+        
+        # Return path relative to static directory
+        relative_path = audio_path.replace("static/", "")
+        return {"audio_url": relative_path}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating podcast: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Clean up uploaded file
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                logger.info(f"Cleaned up temporary file: {file_path}")
+            except Exception as e:
+                logger.error(f"Error cleaning up file {file_path}: {str(e)}")
 
 def open_browser():
     """Open browser to application URL"""

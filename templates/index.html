@@ -269,6 +269,10 @@
                     </svg>
                     Documents
                 </a>
+                <a href="/podcast" class="nav-item">
+                    <img src="/static/images/podcast.jpg" alt="Podcast" class="w-5 h-5 mr-3 object-contain">
+                    Podcast Generator
+                </a>
                 <a href="#" class="nav-item">
                     <img src="/static/images/youtube.png" alt="YouTube" class="w-5 h-5 mr-3 object-contain">
                     YouTube
@@ -290,7 +294,8 @@
                             <h1 class="text-3xl font-bold text-fidelity-blue">Content Processor</h1>
                         </div>
                         <select id="targetLanguage" class="language-select">
-                            <option value="Japanese" selected>Japanese</option>
+                            <option value="English" selected>English</option>
+                            <option value="Japanese">Japanese</option>
                             <option value="Spanish">Spanish</option>
                             <option value="French">French</option>
                             <option value="German">German</option>
@@ -384,31 +389,68 @@
             showProcessingOverlay(`Generating ${outputType} in ${targetLanguage}...`);
             
             try {
-                const response = await fetch('/generate-version', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        video_ids: [videoId],
-                        target_language: targetLanguage,
-                        output_type: outputType
-                    })
-                });
-                
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${outputType}_${targetLanguage.toLowerCase()}.docx`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    a.remove();
-                    showToast(`${outputType} generated successfully!`);
+                if (outputType === 'podcast') {
+                    // Special handling for podcast generation
+                    const response = await fetch('/api/generate/podcast', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'video_id': videoId,
+                            'target_language': targetLanguage
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.audio_url) {
+                            // Create audio element for preview
+                            const audio = new Audio(`/static/${data.audio_url}`);
+                            audio.controls = true;
+                            
+                            // Create download link
+                            const a = document.createElement('a');
+                            a.href = `/static/${data.audio_url}`;
+                            a.download = `podcast_${targetLanguage.toLowerCase()}.mp3`;
+                            a.click();
+                            
+                            showToast('Podcast generated successfully!');
+                        } else {
+                            throw new Error('No audio URL in response');
+                        }
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to generate podcast');
+                    }
                 } else {
-                    throw new Error(`Failed to generate ${outputType}`);
+                    // Existing handling for other content types
+                    const response = await fetch('/generate-version', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            video_ids: [videoId],
+                            target_language: targetLanguage,
+                            output_type: outputType
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${outputType}_${targetLanguage.toLowerCase()}.docx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                        showToast(`${outputType} generated successfully!`);
+                    } else {
+                        throw new Error(`Failed to generate ${outputType}`);
+                    }
                 }
             } catch (error) {
                 showToast(`Error generating ${outputType}: ${error.message}`, 'error');
